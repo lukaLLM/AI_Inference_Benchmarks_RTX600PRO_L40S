@@ -1,0 +1,55 @@
+name: dynamo-trt_nats_etcd_1
+
+networks:
+  server:
+    driver: bridge
+
+services:
+  dynamo-all-in-one:
+    image: nvcr.io/nvidia/ai-dynamo/tensorrtllm-runtime:0.8.1
+    command: >
+      bash -c "
+      echo '=== Starting NATS server ===' &&
+      nats-server -c /etc/nats/nats-server.conf &
+      echo '=== Starting etcd ===' &&
+      etcd --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://0.0.0.0:2379 --data-dir /tmp/etcd &
+      echo '=== Waiting for services to be ready ===' &&
+      sleep 10 &&
+
+      echo '=== Exporting endpoints ===' &&
+      export ETCD_ENDPOINTS=localhost:2379 &&
+      export NATS_SERVER=nats://localhost:4222 &&
+
+      echo '=== Starting Dynamo frontend ===' &&
+      python3 -m dynamo.frontend --http-port 8000 &
+
+      echo '=== Waiting for frontend to start ===' &&
+      sleep 15 &&
+      echo '=== Starting TensorRT-LLM backend ===' &&
+      python3 -m dynamo.trtllm --model-path Qwen/Qwen3-32B-FP8 --free-gpu-memory-fraction 0.80 --max-seq-len 10000 
+      "
+    networks:
+      - server
+    ports:
+      - 8000:8000
+      - 4222:4222
+      - 2379:2379
+    ipc: host
+    ulimits:
+      memlock: -1
+      stack: 67108864
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    env_file:
+      - ../.env
+    environment:
+      - ETCD_ENDPOINTS=localhost:2379
+      - NATS_SERVER=nats://localhost:4222
+      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
+      - HF_HOME=/data/hf
+      - HF_HUB_CACHE=/data/hf/hub
+    volumes:
+      - ./nats-server.conf:/etc/nats/nats-server.conf:ro
+      - ${HOME}/.cache/huggingface:/data/hf
+    gpus: all

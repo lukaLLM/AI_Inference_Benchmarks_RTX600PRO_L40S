@@ -1,0 +1,15 @@
+[project]
+name = "vllm-sglang-dynamo"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "hf-transfer>=0.1.9",
+    "huggingface-hub>=1.4.1",
+    "openai>=2.17.0",
+    "pybase64>=1.4.3",
+    "requests>=2.32.5",
+    "sglang>=0.5.2",
+    "transformers>=5.1.0",
+]

@@ -1,0 +1,57 @@
+name: dynamo-trt-local_2
+networks:
+  server:
+    driver: bridge
+
+services:
+  dynamo-frontend:
+    image: nvcr.io/nvidia/ai-dynamo/tensorrtllm-runtime:0.8.1
+    networks:
+      - server
+    command: python3 -m dynamo.frontend --http-port 8000 --store-kv file
+    environment:
+      - DYN_REQUEST_PLANE=tcp
+      - HF_HOME=/data/hf
+      - HF_HUB_CACHE=/data/hf/hub
+      - DYN_FILE_KV=/data/dynamo_kv
+    volumes:
+      - ${HOME}/.cache/huggingface:/data/hf
+      - ${HOME}/.cache/dynamo_kv:/data/dynamo_kv
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/live >/dev/null || exit 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  dynamo-trtllm-backend:
+    image: nvcr.io/nvidia/ai-dynamo/tensorrtllm-runtime:0.8.1
+    networks:
+      - server
+    ipc: host
+    ulimits:
+      memlock: -1
+      stack: 67108864
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    gpus: all
+    env_file:
+      - ../.env
+    depends_on:
+      dynamo-frontend:
+        condition: service_healthy
+    command: >
+      trtllm-llmapi-launch python3 -m dynamo.trtllm
+      --model-path Qwen/Qwen3-32B-FP8
+      --store-kv file
+      --free-gpu-memory-fraction 0.8
+      --max-seq-len 10000
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
+      - DYN_REQUEST_PLANE=tcp
+      - HF_HOME=/data/hf
+      - HF_HUB_CACHE=/data/hf/hub
+      - DYN_FILE_KV=/data/dynamo_kv
+    volumes:
+      - ${HOME}/.cache/huggingface:/data/hf
+      - ${HOME}/.cache/dynamo_kv:/data/dynamo_kv

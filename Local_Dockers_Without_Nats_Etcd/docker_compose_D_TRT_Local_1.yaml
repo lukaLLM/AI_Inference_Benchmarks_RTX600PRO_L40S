@@ -1,0 +1,45 @@
+name: dynamo-trt-local_1
+
+networks:
+  server:
+    driver: bridge
+
+services:
+  dynamo-trt:
+    image: nvcr.io/nvidia/ai-dynamo/tensorrtllm-runtime:0.8.1
+    command: >
+      bash -c "
+      echo '=== Starting Dynamo frontend (HTTP API) ===' &&
+      python3 -m dynamo.frontend --http-port 8000 --store-kv file &
+      
+      echo '=== Waiting for frontend to initialize ===' &&
+      sleep 30 &&
+      
+      echo '=== Starting TensorRT-LLM backend ===' &&
+      trtllm-llmapi-launch python3 -m dynamo.trtllm 
+      --model-path Qwen/Qwen3-32B-FP8
+      --store-kv file 
+      --free-gpu-memory-fraction 0.80
+      --max-seq-len 10000
+      "
+    networks:
+      - server
+    ports:
+      - 8000:8000
+    ipc: host
+    env_file:
+      - ../.env
+    ulimits:
+      memlock: -1
+      stack: 67108864
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    gpus: all
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
+      - HF_HOME=/data/hf
+      - HF_HUB_CACHE=/data/hf/hub
+      - DYN_REQUEST_PLANE=tcp
+    volumes:
+       - ~/.cache/huggingface:/data/hf
