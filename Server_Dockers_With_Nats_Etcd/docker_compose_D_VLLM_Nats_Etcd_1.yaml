@@ -47,7 +47,6 @@ services:
     environment:
       - ETCD_ENDPOINTS=localhost:2379
       - NATS_SERVER=nats://localhost:4222
-      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
       - HF_HOME=/data/hf
       - HF_HUB_CACHE=/data/hf/hub
     volumes:
