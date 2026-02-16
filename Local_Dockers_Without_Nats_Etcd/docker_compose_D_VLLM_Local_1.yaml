@@ -34,7 +34,6 @@ services:
         hard: 1048576
     shm_size: '10gb'
     environment:
-      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
       - DYN_REQUEST_PLANE=tcp
       - HF_HOME=/data/hf
       - HF_HUB_CACHE=/data/hf/hub
