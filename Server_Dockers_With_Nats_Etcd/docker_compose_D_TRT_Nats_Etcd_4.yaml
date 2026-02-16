@@ -65,7 +65,6 @@ services:
     environment:
       - ETCD_ENDPOINTS=http://etcd-server:2379
       - NATS_SERVER=nats://nats-server:4222
-      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
       - HF_HOME=/data/hf
       - HF_HUB_CACHE=/data/hf/hub
     ulimits:
