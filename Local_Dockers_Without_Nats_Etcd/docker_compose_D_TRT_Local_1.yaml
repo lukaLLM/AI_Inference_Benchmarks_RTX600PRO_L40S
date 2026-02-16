@@ -37,7 +37,6 @@ services:
         hard: 1048576
     gpus: all
     environment:
-      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN:-}
       - HF_HOME=/data/hf
       - HF_HUB_CACHE=/data/hf/hub
       - DYN_REQUEST_PLANE=tcp
