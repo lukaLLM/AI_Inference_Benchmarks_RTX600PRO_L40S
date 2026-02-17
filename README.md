@@ -4,7 +4,7 @@ A comprehensive benchmark comparison between vLLM and SGLang inference engines u
 
 ---
 ## Youtube Video
-
+https://www.youtube.com/watch?v=zNe6YfTOCRw&t=1s
 ## 📋 Overview
 
 This repository contains benchmarking results and configurations for comparing vLLM and SGLang performance on the same hardware and model setup. The benchmarks use the ShareGPT dataset with 1000 prompts to evaluate throughput, latency, and resource utilization.
